@@ -29,7 +29,14 @@ def _format_metadata(metadata: dict) -> str:
 
 
 @gpu()
-def _ingest(url: str, pdf_file: str | None, chunk_size: int, chunk_overlap: int, collection_name: str):
+def _ingest(
+    url: str,
+    pdf_file: str | None,
+    manual_transcript: str,
+    chunk_size: int,
+    chunk_overlap: int,
+    collection_name: str,
+):
     logger.info(
         "Ingest requested url=%s pdf_file=%s chunk_size=%s chunk_overlap=%s collection=%s",
         url,
@@ -47,6 +54,7 @@ def _ingest(url: str, pdf_file: str | None, chunk_size: int, chunk_overlap: int,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             collection_name=collection_name,
+            manual_transcript=manual_transcript,
         )
         document = result.document
         status = (
@@ -198,6 +206,11 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                                 file_types=[".pdf"],
                                 type="filepath",
                             )
+                            manual_transcript = gr.Textbox(
+                                label="YouTube transcript fallback",
+                                placeholder="If hosted YouTube transcript extraction is blocked, paste the transcript here and keep the YouTube URL above.",
+                                lines=5,
+                            )
                             with gr.Row():
                                 chunk_size = gr.Slider(
                                     400,
@@ -259,7 +272,14 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
 
                     ingest_btn.click(
                         fn=_ingest,
-                        inputs=[source_url, pdf_file, chunk_size, chunk_overlap, collection_name_ingest],
+                        inputs=[
+                            source_url,
+                            pdf_file,
+                            manual_transcript,
+                            chunk_size,
+                            chunk_overlap,
+                            collection_name_ingest,
+                        ],
                         outputs=[
                             status,
                             title,
@@ -314,14 +334,6 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                         inputs=[query, limit, collection_name_retrieve],
                         outputs=[answer_output, reasoning_output, search_results],
                     )
-
-            # Sync collection names across tabs
-            collection_name_ingest.change(
-                fn=lambda x: x, inputs=[collection_name_ingest], outputs=[collection_name_retrieve]
-            )
-            collection_name_retrieve.change(
-                fn=lambda x: x, inputs=[collection_name_retrieve], outputs=[collection_name_ingest]
-            )
 
     return demo
 

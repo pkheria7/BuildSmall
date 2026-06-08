@@ -1,6 +1,7 @@
 from urllib.parse import parse_qs, urlparse
 
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import YouTubeTranscriptApiException
 
 from app.core.models import Document, SourceType
 
@@ -21,14 +22,24 @@ def _extract_video_id(url: str) -> str:
 def extract_youtube(url: str) -> Document:
     video_id = _extract_video_id(url)
     api = YouTubeTranscriptApi()
-    if hasattr(api, "fetch"):
-        transcript = api.fetch(video_id)
-        transcript_items = transcript.to_raw_data()
-    else:
-        transcript_items = YouTubeTranscriptApi.get_transcript(video_id)
+    try:
+        if hasattr(api, "fetch"):
+            transcript = api.fetch(video_id)
+            transcript_items = transcript.to_raw_data()
+        else:
+            transcript_items = YouTubeTranscriptApi.get_transcript(video_id)
+    except YouTubeTranscriptApiException as exc:
+        raise ValueError(
+            "Could not fetch the YouTube transcript. On hosted environments such as "
+            "Hugging Face Spaces, YouTube often blocks transcript requests from datacenter IPs. "
+            "Paste the transcript into the YouTube transcript fallback box and retry."
+        ) from exc
 
     if not transcript_items:
-        raise ValueError("No transcript was available for this YouTube video.")
+        raise ValueError(
+            "No transcript was available for this YouTube video. Paste the transcript into "
+            "the YouTube transcript fallback box and retry."
+        )
 
     lines = []
     for item in transcript_items:

@@ -92,6 +92,23 @@ HF_TOKEN=<token-if-needed-for-gated-model-downloads>
 
 Use a hosted Qdrant instance for Hugging Face Spaces. `localhost:6333` only works for local development.
 
+## Hosted YouTube Transcript Note
+
+YouTube transcript fetching can fail on hosted platforms such as Hugging Face Spaces because YouTube may block transcript requests from datacenter IP addresses.
+
+If a YouTube URL fails on the hosted app:
+
+1. Open the video on YouTube.
+2. Copy the transcript manually.
+3. Paste it into the **YouTube transcript fallback** box.
+4. Keep the YouTube URL in the URL field and run ingestion again.
+
+This bypasses hosted transcript fetching while still storing the content as a YouTube source in Qdrant.
+
+## Qdrant Collection Name
+
+The Ingest and Retrieve tabs each have their own collection-name field. Set both to the same Qdrant collection when you want to search what you just ingested. The fields are intentionally not auto-synced because auto-sync can cause continuous refreshes in hosted Gradio Spaces.
+
 ## Setup
 
 ```bash
