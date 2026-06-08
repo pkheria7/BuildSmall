@@ -1,14 +1,13 @@
 ---
 title: BuildSmall KnowledgeHub
 emoji: 📚
-colorFrom: cyan
-colorTo: lime
+colorFrom: blue
+colorTo: purple
 sdk: gradio
-sdk_version: 6.17.3
 app_file: app.py
 pinned: false
 license: mit
-short_description: Ingest PDFs, arXiv papers, and YouTube transcripts into Qdrant with NVIDIA-powered RAG.
+short_description: AI knowledge hub for PDFs, arXiv, YouTube and Qdrant powered by Nvidia
 ---
 
 # BuildSmall KnowledgeHub
