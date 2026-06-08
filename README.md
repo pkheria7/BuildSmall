@@ -7,7 +7,7 @@ sdk: gradio
 app_file: app.py
 pinned: false
 license: mit
-short_description: AI knowledge hub for PDFs, arXiv, YouTube and Qdrant powered by Nvidia
+short_description: AI knowledge hub for groups, powered by Nvidia
 ---
 
 # BuildSmall KnowledgeHub
