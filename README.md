@@ -5,7 +5,7 @@ colorFrom: blue
 colorTo: purple
 sdk: gradio
 app_file: app.py
-pinned: false
+pinned: true
 license: mit
 short_description: AI knowledge hub for groups, powered by Nvidia
 ---

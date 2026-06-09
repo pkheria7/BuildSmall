@@ -10,13 +10,18 @@ from app.utils.zerogpu import gpu
 logger = logging.getLogger(__name__)
 
 THEME = gr.themes.Base(
-    primary_hue="cyan",
-    secondary_hue="lime",
-    neutral_hue="slate",
+    primary_hue="teal",
+    secondary_hue="yellow",
+    neutral_hue="stone",
     radius_size="sm",
     font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"],
     font_mono=[gr.themes.GoogleFont("JetBrains Mono"), "ui-monospace", "monospace"],
 )
+
+# Fixed pipeline constants
+CHUNK_SIZE = 1200
+CHUNK_OVERLAP = 200
+RETRIEVE_K = 3
 
 
 def _format_metadata(metadata: dict) -> str:
@@ -33,16 +38,14 @@ def _ingest(
     url: str,
     pdf_file: str | None,
     manual_transcript: str,
-    chunk_size: int,
-    chunk_overlap: int,
     collection_name: str,
 ):
     logger.info(
         "Ingest requested url=%s pdf_file=%s chunk_size=%s chunk_overlap=%s collection=%s",
         url,
         pdf_file,
-        chunk_size,
-        chunk_overlap,
+        CHUNK_SIZE,
+        CHUNK_OVERLAP,
         collection_name,
     )
     try:
@@ -51,8 +54,8 @@ def _ingest(
         result = ingest_source(
             url=url,
             pdf_path=pdf_file,
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
+            chunk_size=CHUNK_SIZE,
+            chunk_overlap=CHUNK_OVERLAP,
             collection_name=collection_name,
             manual_transcript=manual_transcript,
         )
@@ -90,12 +93,12 @@ def _ingest(
 
 
 @gpu()
-def _search(query: str, limit: int, collection_name: str):
-    logger.info("Search requested query=%s limit=%s collection=%s", query, limit, collection_name)
+def _search(query: str, collection_name: str):
+    logger.info("Search requested query=%s limit=%s collection=%s", query, RETRIEVE_K, collection_name)
     try:
         from app.services.ingestion import search_knowledge_base
 
-        results = search_knowledge_base(query, limit=limit, collection_name=collection_name)
+        results = search_knowledge_base(query, limit=RETRIEVE_K, collection_name=collection_name)
     except Exception as exc:
         if "MPS backend out of memory" in str(exc):
             return (
@@ -127,12 +130,12 @@ def _search(query: str, limit: int, collection_name: str):
 
 
 @gpu()
-def _answer(query: str, limit: int, collection_name: str):
-    logger.info("Answer requested query=%s limit=%s collection=%s", query, limit, collection_name)
+def _answer(query: str, collection_name: str):
+    logger.info("Answer requested query=%s limit=%s collection=%s", query, RETRIEVE_K, collection_name)
     try:
         from app.services.ingestion import answer_from_knowledge_base
 
-        result = answer_from_knowledge_base(query, limit=limit, collection_name=collection_name)
+        result = answer_from_knowledge_base(query, limit=RETRIEVE_K, collection_name=collection_name)
     except Exception as exc:
         if "MPS backend out of memory" in str(exc):
             return (
@@ -211,21 +214,6 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                                 placeholder="If hosted YouTube transcript extraction is blocked, paste the transcript here and keep the YouTube URL above.",
                                 lines=5,
                             )
-                            with gr.Row():
-                                chunk_size = gr.Slider(
-                                    400,
-                                    2500,
-                                    value=settings.CHUNK_SIZE,
-                                    step=50,
-                                    label="Chunk size",
-                                )
-                                chunk_overlap = gr.Slider(
-                                    0,
-                                    600,
-                                    value=settings.CHUNK_OVERLAP,
-                                    step=25,
-                                    label="Chunk overlap",
-                                )
                             collection_name_ingest = gr.Textbox(
                                 label="Collection Name",
                                 value=settings.QDRANT_COLLECTION_NAME,
@@ -276,8 +264,6 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                             source_url,
                             pdf_file,
                             manual_transcript,
-                            chunk_size,
-                            chunk_overlap,
                             collection_name_ingest,
                         ],
                         outputs=[
@@ -296,14 +282,13 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                     with gr.Row(equal_height=True):
                         with gr.Column(scale=3, elem_classes=["kh-panel"]):
                             gr.Markdown(
-                                "### Retrieval Probe\n<div class='kh-subhead'>Run a quick similarity search against the same Qdrant collection after ingestion.</div>"
+                                "### Retrieval Probe\n<div class='kh-subhead'>Run a similarity search against the Qdrant collection. Returns top 3 matches.</div>"
                             )
                             query = gr.Textbox(
                                 label="Search query",
                                 placeholder="Ask a question or enter keywords",
                                 lines=4,
                             )
-                            limit = gr.Slider(1, 10, value=5, step=1, label="Results")
                             collection_name_retrieve = gr.Textbox(
                                 label="Collection Name",
                                 value=settings.QDRANT_COLLECTION_NAME,
@@ -326,12 +311,12 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
 
                     search_btn.click(
                         fn=_search,
-                        inputs=[query, limit, collection_name_retrieve],
+                        inputs=[query, collection_name_retrieve],
                         outputs=search_results,
                     )
                     answer_btn.click(
                         fn=_answer,
-                        inputs=[query, limit, collection_name_retrieve],
+                        inputs=[query, collection_name_retrieve],
                         outputs=[answer_output, reasoning_output, search_results],
                     )
 
