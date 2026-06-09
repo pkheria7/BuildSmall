@@ -7,7 +7,7 @@ from typing import Any
 class SourceType(str, Enum):
     PDF = "pdf"
     ARXIV = "arxiv"
-    YOUTUBE = "youtube"
+    MEDIUM = "medium"
 
 
 @dataclass(frozen=True)

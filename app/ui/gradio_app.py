@@ -37,7 +37,6 @@ def _format_metadata(metadata: dict) -> str:
 def _ingest(
     url: str,
     pdf_file: str | None,
-    manual_transcript: str,
     collection_name: str,
 ):
     logger.info(
@@ -57,7 +56,6 @@ def _ingest(
             chunk_size=CHUNK_SIZE,
             chunk_overlap=CHUNK_OVERLAP,
             collection_name=collection_name,
-            manual_transcript=manual_transcript,
         )
         document = result.document
         status = (
@@ -174,7 +172,7 @@ def build_app() -> gr.Blocks:
             gr.Markdown(
                 f"""
 # {settings.PROJECT_NAME}
-Turn papers, PDFs, and videos into a searchable vector memory.
+Turn papers, PDFs, and articles into a searchable vector memory.
 
 Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded answers.
 """,
@@ -187,7 +185,7 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
   <div class="kh-chip">Parser <code>{settings.NEMOTRON_PARSE_MODEL}</code></div>
   <div class="kh-chip">Chat <code>{settings.NVIDIA_CHAT_MODEL}</code></div>
   <div class="kh-chip">Collection <code>{settings.QDRANT_COLLECTION_NAME}</code></div>
-  <div class="kh-chip">Sources PDF · arXiv · YouTube</div>
+  <div class="kh-chip">Sources PDF · arXiv · Medium</div>
 </div>
 """,
             )
@@ -200,19 +198,14 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                                 "### Source Intake\n<div class='kh-subhead'>Upload a PDF or paste one link. The pipeline handles extraction, chunking, local embeddings, and Qdrant upload.</div>"
                             )
                             source_url = gr.Textbox(
-                                label="YouTube or arXiv input",
-                                placeholder="Paste a YouTube URL, arXiv URL, or arXiv ID",
+                                label="Medium or arXiv input",
+                                placeholder="Paste a Medium article URL, arXiv URL, or arXiv ID",
                                 lines=2,
                             )
                             pdf_file = gr.File(
                                 label="PDF document",
                                 file_types=[".pdf"],
                                 type="filepath",
-                            )
-                            manual_transcript = gr.Textbox(
-                                label="YouTube transcript fallback",
-                                placeholder="If hosted YouTube transcript extraction is blocked, paste the transcript here and keep the YouTube URL above.",
-                                lines=5,
                             )
                             collection_name_ingest = gr.Textbox(
                                 label="Collection Name",
@@ -263,7 +256,6 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                         inputs=[
                             source_url,
                             pdf_file,
-                            manual_transcript,
                             collection_name_ingest,
                         ],
                         outputs=[

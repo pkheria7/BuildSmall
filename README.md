@@ -14,11 +14,11 @@ short_description: AI knowledge hub for groups, powered by Nvidia
 
 BuildSmall KnowledgeHub is a modular Gradio app for loading knowledge from:
 
-- YouTube links with public transcripts/captions
+- Medium article links through Freedium
 - arXiv links or IDs
 - PDF documents
 
-It extracts text, chunks it, embeds chunks locally with the configured NVIDIA Nemotron embedding model, uploads vectors into Qdrant, and generates grounded answers with NVIDIA's OpenAI-compatible chat API.
+It extracts text, captures Medium image references/captions when available, chunks the content, embeds chunks locally with the configured NVIDIA Nemotron embedding model, uploads vectors into Qdrant, and generates grounded answers with NVIDIA's OpenAI-compatible chat API.
 
 ## NVIDIA Usage
 
@@ -92,18 +92,15 @@ HF_TOKEN=<token-if-needed-for-gated-model-downloads>
 
 Use a hosted Qdrant instance for Hugging Face Spaces. `localhost:6333` only works for local development.
 
-## Hosted YouTube Transcript Note
+## Medium Article Extraction
 
-YouTube transcript fetching can fail on hosted platforms such as Hugging Face Spaces because YouTube may block transcript requests from datacenter IP addresses.
+Medium articles are fetched through Freedium:
 
-If a YouTube URL fails on the hosted app:
+```text
+https://freedium-mirror.cfd/
+```
 
-1. Open the video on YouTube.
-2. Copy the transcript manually.
-3. Paste it into the **YouTube transcript fallback** box.
-4. Keep the YouTube URL in the URL field and run ingestion again.
-
-This bypasses hosted transcript fetching while still storing the content as a YouTube source in Qdrant.
+Pass a Medium article URL into the app. The extractor builds a Freedium mirror URL, extracts the readable article text, collects image URLs and alt/caption text when available, then sends that combined content through the same chunking, embedding, and Qdrant upload pipeline.
 
 ## Qdrant Collection Name
 
@@ -141,10 +138,10 @@ The app binds to `0.0.0.0:7860`, which is suitable for Hugging Face Spaces and c
 ```text
 app/
   core/        settings and shared models
-  extractors/  PDF, arXiv, and YouTube extraction
+  extractors/  PDF, arXiv, and Medium extraction
   services/    chunking, embeddings, Qdrant, retrieval, ingestion orchestration
   ui/          Gradio Blocks UI
   utils/       source detection helpers
 ```
 
-YouTube extraction requires captions/transcripts to be available for the video. arXiv ingestion downloads the paper PDF and parses it with `pypdf`.
+Medium extraction uses `freedium-mirror.cfd`. arXiv ingestion downloads the paper PDF and parses it with `pypdf`.

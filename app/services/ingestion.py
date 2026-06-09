@@ -3,8 +3,8 @@ from pathlib import Path
 from app.core.config import settings
 from app.core.models import Document, IngestionResult, SourceType
 from app.extractors.arxiv import extract_arxiv
+from app.extractors.medium import extract_medium
 from app.extractors.pdf import extract_pdf
-from app.extractors.youtube import extract_youtube
 from app.services.chat import NvidiaChatClient
 from app.services.chunking import chunk_document
 from app.services.embeddings import get_embedding_client
@@ -18,23 +18,14 @@ EXPORT_DIR = Path("data/exports")
 def extract_document(
     url: str | None = None,
     pdf_path: str | None = None,
-    manual_transcript: str | None = None,
 ) -> Document:
     source_type = detect_source(url, pdf_path)
     if source_type == SourceType.PDF:
         return extract_pdf(str(pdf_path))
     if source_type == SourceType.ARXIV:
         return extract_arxiv(str(url))
-    if source_type == SourceType.YOUTUBE:
-        if manual_transcript and manual_transcript.strip():
-            return Document(
-                source_type=SourceType.YOUTUBE,
-                title="YouTube Transcript",
-                text=manual_transcript.strip(),
-                source=str(url),
-                metadata={"transcript_source": "manual"},
-            )
-        return extract_youtube(str(url))
+    if source_type == SourceType.MEDIUM:
+        return extract_medium(str(url))
     raise ValueError(f"Unsupported source type: {source_type}")
 
 
@@ -69,9 +60,8 @@ def ingest_source(
     chunk_size: int | None = None,
     chunk_overlap: int | None = None,
     collection_name: str | None = None,
-    manual_transcript: str | None = None,
 ) -> IngestionResult:
-    document = extract_document(url=url, pdf_path=pdf_path, manual_transcript=manual_transcript)
+    document = extract_document(url=url, pdf_path=pdf_path)
     chunks = chunk_document(
         document,
         chunk_size=chunk_size or settings.CHUNK_SIZE,

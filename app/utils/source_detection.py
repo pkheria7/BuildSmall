@@ -6,7 +6,7 @@ from app.core.models import SourceType
 
 
 ARXIV_RE = re.compile(r"(?:arxiv\.org/(?:abs|pdf)/)?(?P<id>\d{4}\.\d{4,5})(?:v\d+)?", re.I)
-YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"}
+MEDIUM_HOST_PARTS = ("medium.com", "freedium")
 
 
 def detect_source(url: str | None, pdf_path: str | None) -> SourceType:
@@ -17,17 +17,17 @@ def detect_source(url: str | None, pdf_path: str | None) -> SourceType:
         raise ValueError("Uploaded file must be a PDF.")
 
     if not url or not url.strip():
-        raise ValueError("Provide a YouTube link, arXiv link/ID, or upload a PDF.")
+        raise ValueError("Provide a Medium article link, arXiv link/ID, or upload a PDF.")
 
     clean_url = url.strip()
     parsed = urlparse(clean_url)
     host = parsed.netloc.lower()
 
-    if host in YOUTUBE_HOSTS:
-        return SourceType.YOUTUBE
     if "arxiv.org" in host or ARXIV_RE.search(clean_url):
         return SourceType.ARXIV
-    raise ValueError("Could not detect source type. Use a YouTube URL, arXiv URL/ID, or PDF.")
+    if parsed.scheme in {"http", "https"}:
+        return SourceType.MEDIUM
+    raise ValueError("Could not detect source type. Use a Medium URL, arXiv URL/ID, or PDF.")
 
 
 def extract_arxiv_id(value: str) -> str:
