@@ -9,3 +9,4 @@ qdrant-client>=1.12.1
 requests>=2.32.3
 sentence-transformers>=3.0.1
 spaces
+torchvision

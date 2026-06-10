@@ -169,12 +169,15 @@ def build_app() -> gr.Blocks:
         title=f"{settings.PROJECT_NAME} Ingestor",
     ) as demo:
         with gr.Column(elem_id="kh-shell"):
+            # Room Tag badge inside the chalkboard frame
+            gr.HTML(
+                f'<div class="kh-room-tag">ROOM: {settings.QDRANT_COLLECTION_NAME}</div>',
+                elem_id="kh-room-container"
+            )
             gr.Markdown(
                 f"""
-# {settings.PROJECT_NAME}
-Turn papers, PDFs, and articles into a searchable vector memory.
-
-Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded answers.
+# KnowledgeMesh
+*push papers · ask questions · study together*
 """,
                 elem_id="kh-title",
             )
@@ -195,7 +198,7 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                     with gr.Row(equal_height=True):
                         with gr.Column(scale=5, elem_classes=["kh-panel"]):
                             gr.Markdown(
-                                "### Source Intake\n<div class='kh-subhead'>Upload a PDF or paste one link. The pipeline handles extraction, chunking, local embeddings, and Qdrant upload.</div>"
+                                "### Push source\n<div class='kh-subhead'>Upload a PDF or paste one link. The pipeline handles extraction, chunking, local embeddings, and Qdrant upload.</div>"
                             )
                             source_url = gr.Textbox(
                                 label="Medium or arXiv input",
@@ -212,7 +215,7 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                                 value=settings.QDRANT_COLLECTION_NAME,
                                 placeholder="Enter Qdrant collection name",
                             )
-                            ingest_btn = gr.Button("Ingest into Qdrant", variant="primary")
+                            ingest_btn = gr.Button("Write to board →", variant="primary")
 
                         with gr.Column(scale=4, elem_classes=["kh-panel"]):
                             gr.Markdown("### Pipeline Status")
@@ -274,7 +277,7 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                     with gr.Row(equal_height=True):
                         with gr.Column(scale=3, elem_classes=["kh-panel"]):
                             gr.Markdown(
-                                "### Retrieval Probe\n<div class='kh-subhead'>Run a similarity search against the Qdrant collection. Returns top 3 matches.</div>"
+                                "### Ask the room\n<div class='kh-subhead'>Run a similarity search against the Qdrant collection. Returns top 3 matches.</div>"
                             )
                             query = gr.Textbox(
                                 label="Search query",
@@ -287,8 +290,21 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                                 placeholder="Enter Qdrant collection name",
                             )
                             with gr.Row():
-                                search_btn = gr.Button("Search Qdrant", variant="secondary")
-                                answer_btn = gr.Button("Answer with NVIDIA", variant="primary")
+                                search_btn = gr.Button("Search", variant="secondary")
+                                answer_btn = gr.Button("Answer", variant="primary")
+                            gr.HTML(
+                                """
+                                <div class="kh-retrieve-status">
+                                  <div class="kh-online-status">
+                                    <span class="kh-dot green"></span>
+                                    <span class="kh-dot green"></span>
+                                    <span class="kh-dot green"></span>
+                                    <span class="kh-online-text">2/4 online</span>
+                                  </div>
+                                  <div class="kh-brackets">[ ]</div>
+                                </div>
+                                """
+                            )
                         with gr.Column(scale=5, elem_classes=["kh-panel"]):
                             gr.Markdown("### Answer")
                             answer_output = gr.Markdown(elem_id="kh-answer")
@@ -311,6 +327,21 @@ Extract text, chunk it cleanly, embed locally, and use NVIDIA chat for grounded 
                         inputs=[query, collection_name_retrieve],
                         outputs=[answer_output, reasoning_output, search_results],
                     )
+
+            # Wooden chalk tray with white, yellow, and purple chalk pieces resting on it
+            gr.HTML(
+                """
+                <div class="kh-bottom-tray">
+                  <div class="kh-chalks">
+                    <span class="kh-chalk white"></span>
+                    <span class="kh-chalk yellow"></span>
+                    <span class="kh-chalk purple"></span>
+                  </div>
+                  <div class="kh-watermark">NVIDIA · Qdrant · k=3</div>
+                </div>
+                """,
+                elem_id="kh-bottom-container"
+            )
 
     return demo
 
